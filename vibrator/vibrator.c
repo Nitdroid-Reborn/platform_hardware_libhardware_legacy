@@ -21,7 +21,10 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define THE_DEVICE "/sys/class/timed_output/vibrator/enable"
+#define LOG_TAG "Vibrator"
+#include <utils/Log.h>
+
+#define THE_DEVICE "/sys/bus/platform/devices/twl4030_vibra/pulse"
 
 static int sendit(int timeout_ms)
 {
@@ -34,11 +37,15 @@ static int sendit(int timeout_ms)
     }
 #endif
 
-    fd = open(THE_DEVICE, O_RDWR);
+    fd = open(THE_DEVICE, O_WRONLY);
     if(fd < 0)
         return errno;
 
-    nwr = sprintf(value, "%d\n", timeout_ms);
+    if (timeout_ms > 0)
+        nwr = sprintf(value, "250 %d\n", timeout_ms);
+    else
+        nwr = sprintf(value, "0 0\n");
+    LOGD("vibra: %s", value);
     ret = write(fd, value, nwr);
 
     close(fd);
